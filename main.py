@@ -1,15 +1,14 @@
+import os
 from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
-import requests
-import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
 
-VERIFY_TOKEN = "khushi_token_123"
-
-META_APP_ID = "1677000596794817"
-META_APP_SECRET = "YOUR_APP_SECRET"   # 🔴 yaha apna secret daalo
+VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")
 
 # ⭐ Allow BOTH your Vercel domains (zeta + f90h)
 app.add_middleware(
