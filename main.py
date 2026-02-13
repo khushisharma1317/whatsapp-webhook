@@ -1,7 +1,7 @@
 import os
 import requests
 from fastapi import FastAPI, Request
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
@@ -13,13 +13,12 @@ VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")
 META_APP_ID = os.getenv("META_APP_ID")
 META_APP_SECRET = os.getenv("META_APP_SECRET")
 
+FRONTEND_URL = os.getenv("FRONTEND_URL")
+
+# ✅ CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://whatsapp-dashboard-zeta.vercel.app",
-        "https://whatsapp-dashboard-mz60.vercel.app",
-        "https://whatsapp-dashboard-f90h.vercel.app",
-    ],
+    allow_origins=[FRONTEND_URL],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -27,6 +26,7 @@ app.add_middleware(
 
 messages_store = []
 
+# 🔵 Webhook verification
 @app.get("/webhook")
 async def verify_webhook(request: Request):
     mode = request.query_params.get("hub.mode")
@@ -38,9 +38,12 @@ async def verify_webhook(request: Request):
 
     return PlainTextResponse(content="Verification failed", status_code=400)
 
+
+# 🟢 Receive WhatsApp messages
 @app.post("/webhook")
 async def receive_message(request: Request):
     data = await request.json()
+    print("📩 Incoming:", data)
 
     try:
         entry = data["entry"][0]
@@ -58,17 +61,29 @@ async def receive_message(request: Request):
             })
 
     except Exception as e:
-        print("Error:", e)
+        print("❌ Parsing error:", e)
 
     return {"status": "received"}
 
+
+# 🔵 Dashboard fetch
 @app.get("/messages")
 async def get_messages():
     return messages_store
 
+
+# 🔥 Embedded Signup → CODE → ACCESS TOKEN
 @app.post("/signup-data")
 async def signup_data(data: dict):
     code = data.get("code")
+
+    if not code:
+        return JSONResponse(
+            status_code=400,
+            content={"error": "No code received"}
+        )
+
+    print("🔑 CODE RECEIVED:", code)
 
     token_url = "https://graph.facebook.com/v18.0/oauth/access_token"
 
@@ -76,12 +91,12 @@ async def signup_data(data: dict):
         "client_id": META_APP_ID,
         "client_secret": META_APP_SECRET,
         "code": code,
-        "redirect_uri": "https://whatsapp-dashboard-f90h.vercel.app/"
+        "redirect_uri": FRONTEND_URL,  # ⚠️ must match Meta + frontend
     }
 
     response = requests.get(token_url, params=params)
     token_data = response.json()
 
-    print("TOKEN DATA 🔥", token_data)
+    print("🎯 TOKEN RESPONSE:", token_data)
 
     return token_data
