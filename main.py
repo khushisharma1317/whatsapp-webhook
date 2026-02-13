@@ -72,6 +72,12 @@ async def get_messages():
     return messages_store
 
 
+@app.get("/")
+async def root():
+    return {"status": "Backend running"}
+
+
+
 # 🔥 Embedded Signup → CODE → ACCESS TOKEN
 @app.post("/signup-data")
 async def signup_data(data: dict):
