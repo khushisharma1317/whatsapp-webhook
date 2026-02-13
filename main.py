@@ -16,12 +16,13 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://whatsapp-dashboard-zeta.vercel.app",
-        "https://whatsapp-dashboard-f90h.vercel.app",
+        "https://whatsapp-dashboard-mz60.vercel.app"  # 👈 NEW DOMAIN ADD
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 messages_store = []
 
